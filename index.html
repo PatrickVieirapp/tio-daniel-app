@@ -683,7 +683,7 @@
       <div class="topbar-title" id="topbar-title">🚌 Tio Daniel</div>
       <div class="topbar-sub" id="topbar-sub">Carregando...</div>
     </div>
-    <button onclick="doLogout()" style="background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;">⏏️</button>
+    <button onclick="confirmLogout()" style="background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.3);color:#FCA5A5;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;">Sair</button>
   </div>
 
   <!-- ── DASHBOARD ─────────────────────────────────────── -->
@@ -1038,6 +1038,12 @@ function doLogout() {
   document.getElementById('bottom-nav').style.display = 'none';
   document.getElementById('login-screen').classList.add('active');
   document.getElementById('login-password').value = '';
+}
+
+function confirmLogout() {
+  if (confirm('Deseja sair do app? Precisará digitar a senha para entrar novamente.')) {
+    doLogout();
+  }
 }
 
 // ── Show App ──────────────────────────────────────────────
