@@ -1384,32 +1384,52 @@ function openSaiuFromHist() {
 // ── Resumo Anual ──────────────────────────────────────────────
 async function loadResumoAnual() {
   try {
-    const data = await api('/resumo-anual');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    
+    const res = await fetch(`${API_URL}/resumo-anual`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    
+    if (!res.ok) {
+      document.getElementById('resumo-anual-container').innerHTML = 
+        '<div style="text-align:center;color:var(--gray);padding:12px;font-size:13px;">Não foi possível carregar</div>';
+      return;
+    }
+    const data = await res.json();
     if (!data) return;
 
     const maxVal = Math.max(...data.resumo.map(r => r.total));
     const mesAtualIdx = mesAtual - 1;
 
+    const maxVal = Math.max(...data.resumo.map(r => r.total), 1);
+    const mesAtualIdx = mesAtual - 1;
+    const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+    const bars = data.resumo.map((r, i) => {
+      const pct = Math.max((r.total / maxVal * 100), r.total > 0 ? 6 : 2);
+      const isAtual = i === mesAtualIdx;
+      const cor = isAtual ? 'var(--teal)' : r.total > 0 ? 'var(--navy3)' : 'rgba(255,255,255,0.04)';
+      const tooltip = r.total > 0 ? fmt(r.total) : '';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        ${isAtual && r.total > 0 ? `<div style="font-size:8px;color:var(--tealLt);font-weight:600;white-space:nowrap;">${fmt(r.total)}</div>` : '<div style="font-size:8px;"> </div>'}
+        <div style="width:100%;background:${cor};border-radius:4px 4px 0 0;height:${pct}px;min-height:2px;transition:height 0.5s;"></div>
+      </div>`;
+    }).join('');
+
+    const labels = data.resumo.map((r, i) => {
+      const isAtual = i === mesAtualIdx;
+      return `<div style="flex:1;text-align:center;font-size:9px;color:${isAtual ? 'var(--tealLt)' : 'var(--gray2)'};">${r.mes_curto}</div>`;
+    }).join('');
+
     const html = `
-      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:8px;">
-        ${data.resumo.map((r, i) => {
-          const pct = maxVal > 0 ? (r.total / maxVal * 100) : 0;
-          const isAtual = i === mesAtualIdx;
-          const cor = isAtual ? 'var(--teal)' : r.total > 0 ? 'var(--navy3)' : 'rgba(255,255,255,0.05)';
-          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
-            <div style="width:100%;background:${cor};border-radius:4px 4px 0 0;height:${Math.max(pct,4)}%;min-height:4px;transition:height 0.5s;"></div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;gap:4px;">
-        ${data.resumo.map((r, i) => {
-          const isAtual = i === mesAtualIdx;
-          return `<div style="flex:1;text-align:center;font-size:9px;color:${isAtual ? 'var(--tealLt)' : 'var(--gray2)'};">${r.mes_curto}</div>`;
-        }).join('')}
-      </div>
-      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:12px;color:var(--gray);">Total do ano</span>
-        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--teal2);">R$ ${data.total_ano.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px;margin-bottom:4px;">${bars}</div>
+      <div style="display:flex;gap:3px;margin-bottom:12px;">${labels}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--gray);">Total recebido no ano</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--teal2);">R$ ${data.total_ano.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
       </div>
     `;
     document.getElementById('resumo-anual-container').innerHTML = html;
