@@ -736,6 +736,13 @@
     <button class="btn-primary" style="margin-top:16px;" onclick="showTab('tab-naopagou')">
       Ver quem não pagou →
     </button>
+
+    <div style="margin-top:20px;">
+      <div class="section-title" style="margin-bottom:12px;">📅 Recebido por mês</div>
+      <div class="card" id="resumo-anual-container">
+        <div style="text-align:center;color:var(--gray);padding:16px;">Carregando...</div>
+      </div>
+    </div>
   </div>
 
   <!-- ── NÃO PAGOU ─────────────────────────────────────── -->
@@ -864,11 +871,84 @@
   </div>
 </div>
 
+<!-- ── MODAL HISTÓRICO ───────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-historico">
+  <div class="modal" style="max-height:85dvh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div id="modal-hist-header" style="margin-bottom:16px;">
+      <div class="modal-title" id="modal-hist-nome">Carregando...</div>
+      <div style="font-size:13px;color:var(--gray);" id="modal-hist-escola"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div class="card-sm" style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green);" id="modal-hist-pago">-</div>
+        <div style="font-size:11px;color:var(--gray);">meses pagos</div>
+      </div>
+      <div class="card-sm" style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal2);" id="modal-hist-total">-</div>
+        <div style="font-size:11px;color:var(--gray);">total pago</div>
+      </div>
+    </div>
+    <div id="modal-hist-meses" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button class="btn-primary" style="flex:1;" onclick="openPagoFromHist()">💰 Marcar PAGO</button>
+      <button class="btn-primary" style="flex:1;background:var(--amber);" onclick="openSaiuFromHist()">🚪 Saiu</button>
+    </div>
+    <button class="btn-secondary" onclick="closeModal('modal-historico')">Fechar</button>
+  </div>
+</div>
+
+<!-- ── MODAL OPÇÕES ALUNO ────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-opcoes">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-opcoes-nome" style="margin-bottom:20px;"></div>
+    <button class="btn-primary" style="margin-bottom:10px;" onclick="closeModal('modal-opcoes');openPago(selectedAluno)">
+      💰 Marcar como PAGO
+    </button>
+    <button class="btn-primary" style="margin-bottom:10px;background:var(--amber);" onclick="closeModal('modal-opcoes');openNaoPago(selectedAluno)">
+      ❌ Marcar como NÃO PAGO
+    </button>
+    <button class="btn-primary" style="margin-bottom:10px;background:var(--gray2);" onclick="closeModal('modal-opcoes');openSaiu(selectedAluno)">
+      🚪 Registrar Saída
+    </button>
+    <button class="btn-secondary" onclick="closeModal('modal-opcoes')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ── MODAL NÃO PAGO ────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-naopago">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">❌ Marcar como NÃO PAGO</div>
+    <div id="modal-naopago-nome" style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--amber)"></div>
+    <div class="form-group">
+      <label class="input-label">Mês</label>
+      <select id="modal-naopago-mes" class="select-field input-field">
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3" selected>Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+    <button class="btn-primary" style="background:var(--amber);" onclick="confirmarNaoPago()">Confirmar NÃO PAGO</button>
+    <button class="btn-secondary" onclick="closeModal('modal-naopago')">Cancelar</button>
+  </div>
+</div>
+
 <!-- ── MODAL SAIU ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="modal-saiu">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">🚪 Marcar como Saído</div>
+    <div class="modal-title">🚪 Registrar Saída</div>
     <div id="modal-saiu-nome" style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--amber)"></div>
     <div class="form-group">
       <label class="input-label">Mês que saiu</label>
@@ -967,6 +1047,7 @@ function showApp() {
   loadDashboard();
   loadNaoPagou();
   loadAlunos();
+  loadResumoAnual();
 }
 
 // ── API ───────────────────────────────────────────────────
@@ -1139,12 +1220,13 @@ function openPago(nome) {
 }
 
 function openAlunoMenu(nome, ativo) {
+  openAlunoOpcoes(nome, ativo);
+}
+
+function openAlunoOpcoes(nome, ativo) {
   selectedAluno = nome;
-  if (ativo) {
-    document.getElementById('modal-pago-nome').textContent = nome;
-    document.getElementById('modal-mes').value = mesAtual;
-    document.getElementById('modal-pago').classList.add('active');
-  }
+  document.getElementById('modal-opcoes-nome').textContent = nome;
+  document.getElementById('modal-opcoes').classList.add('active');
 }
 
 function closeModal(id) {
@@ -1164,6 +1246,38 @@ async function confirmarPago() {
       loadAlunos();
     } else {
       showToast(data?.error || 'Erro ao marcar PAGO', 'error');
+    }
+  } catch {
+    showToast('Erro de conexão', 'error');
+  }
+}
+
+function openNaoPago(nome) {
+  selectedAluno = nome;
+  document.getElementById('modal-naopago-nome').textContent = nome;
+  document.getElementById('modal-naopago-mes').value = mesAtual;
+  document.getElementById('modal-naopago').classList.add('active');
+}
+
+function openSaiu(nome) {
+  selectedAluno = nome;
+  document.getElementById('modal-saiu-nome').textContent = nome;
+  document.getElementById('modal-saiu-mes').value = mesAtual;
+  document.getElementById('modal-saiu').classList.add('active');
+}
+
+async function confirmarNaoPago() {
+  const mes = parseInt(document.getElementById('modal-naopago-mes').value);
+  closeModal('modal-naopago');
+  try {
+    const data = await api('/naopago', 'POST', { nome: selectedAluno, mes });
+    if (data && !data.error) {
+      showToast(data.message, 'success');
+      loadDashboard();
+      loadNaoPagou();
+      loadAlunos();
+    } else {
+      showToast(data?.error || 'Erro', 'error');
     }
   } catch {
     showToast('Erro de conexão', 'error');
@@ -1222,6 +1336,85 @@ async function cadastrarAluno() {
     }
   } catch {
     showToast('Erro de conexão', 'error');
+  }
+}
+
+// ── Histórico do aluno ────────────────────────────────────────
+async function openHistorico(nome) {
+  selectedAluno = nome;
+  document.getElementById('modal-hist-nome').textContent = nome;
+  document.getElementById('modal-hist-escola').textContent = 'Carregando...';
+  document.getElementById('modal-hist-meses').innerHTML = '<div style="grid-column:span 2;text-align:center;color:var(--gray);padding:16px;">Carregando...</div>';
+  document.getElementById('modal-historico').classList.add('active');
+
+  try {
+    const data = await api('/aluno/' + encodeURIComponent(nome) + '/historico');
+    if (!data || data.error) { closeModal('modal-historico'); return; }
+
+    document.getElementById('modal-hist-escola').textContent = data.aluno.escola + ' · Dia ' + data.aluno.dia + ' · R$ ' + data.aluno.valor;
+    document.getElementById('modal-hist-pago').textContent = data.meses_pago;
+    document.getElementById('modal-hist-total').textContent = 'R$ ' + data.total_pago.toLocaleString('pt-BR', {minimumFractionDigits:2});
+
+    document.getElementById('modal-hist-meses').innerHTML = data.meses.map(m => {
+      const cor = m.status === 'PAGO' ? 'var(--green)' : m.status === 'NÃO' ? 'var(--red)' : 'var(--gray2)';
+      const icone = m.status === 'PAGO' ? '✅' : m.status === 'NÃO' ? '❌' : '—';
+      const bg = m.status === 'PAGO' ? 'rgba(22,163,74,0.1)' : m.status === 'NÃO' ? 'rgba(220,38,38,0.1)' : 'rgba(255,255,255,0.04)';
+      return `<div style="background:${bg};border-radius:10px;padding:10px;text-align:center;border:1px solid ${cor}22;">
+        <div style="font-size:18px;margin-bottom:2px;">${icone}</div>
+        <div style="font-size:12px;font-weight:600;color:${cor};">${m.mes_curto}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    closeModal('modal-historico');
+  }
+}
+
+function openPagoFromHist() {
+  closeModal('modal-historico');
+  openPago(selectedAluno);
+}
+
+function openSaiuFromHist() {
+  closeModal('modal-historico');
+  document.getElementById('modal-saiu-nome').textContent = selectedAluno;
+  document.getElementById('modal-saiu-mes').value = mesAtual;
+  document.getElementById('modal-saiu').classList.add('active');
+}
+
+// ── Resumo Anual ──────────────────────────────────────────────
+async function loadResumoAnual() {
+  try {
+    const data = await api('/resumo-anual');
+    if (!data) return;
+
+    const maxVal = Math.max(...data.resumo.map(r => r.total));
+    const mesAtualIdx = mesAtual - 1;
+
+    const html = `
+      <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:8px;">
+        ${data.resumo.map((r, i) => {
+          const pct = maxVal > 0 ? (r.total / maxVal * 100) : 0;
+          const isAtual = i === mesAtualIdx;
+          const cor = isAtual ? 'var(--teal)' : r.total > 0 ? 'var(--navy3)' : 'rgba(255,255,255,0.05)';
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div style="width:100%;background:${cor};border-radius:4px 4px 0 0;height:${Math.max(pct,4)}%;min-height:4px;transition:height 0.5s;"></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:4px;">
+        ${data.resumo.map((r, i) => {
+          const isAtual = i === mesAtualIdx;
+          return `<div style="flex:1;text-align:center;font-size:9px;color:${isAtual ? 'var(--tealLt)' : 'var(--gray2)'};">${r.mes_curto}</div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--gray);">Total do ano</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--teal2);">R$ ${data.total_ano.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      </div>
+    `;
+    document.getElementById('resumo-anual-container').innerHTML = html;
+  } catch(e) {
+    console.error('Resumo anual error:', e);
   }
 }
 
