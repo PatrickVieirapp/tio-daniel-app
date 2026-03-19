@@ -51,7 +51,7 @@
 
     /* ── LOGIN ─────────────────────────────────────────────── */
     #login-screen {
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -59,6 +59,10 @@
       padding: 32px 24px;
       background: radial-gradient(ellipse at 50% 0%, rgba(13,148,136,0.2) 0%, transparent 60%),
                   var(--navy);
+    }
+
+    #login-screen.active {
+      display: flex;
     }
 
     .login-bus {
@@ -262,11 +266,12 @@
 
     .dash-valor {
       font-family: 'Syne', sans-serif;
-      font-size: 36px;
+      font-size: 28px;
       font-weight: 800;
       color: var(--white);
-      line-height: 1;
+      line-height: 1.1;
       margin-bottom: 4px;
+      word-break: break-all;
     }
 
     .dash-label {
@@ -290,7 +295,7 @@
 
     .stat-val {
       font-family: 'Syne', sans-serif;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 800;
       line-height: 1;
       margin-bottom: 4px;
