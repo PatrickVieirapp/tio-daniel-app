@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1B2A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tio Daniel">
+  <title>Tio Daniel 🚌</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:    #0D1B2A;
+      --navy2:   #152233;
+      --navy3:   #1E3A5F;
+      --teal:    #0D9488;
+      --teal2:   #14B8A6;
+      --tealLt:  #99F6E4;
+      --green:   #16A34A;
+      --greenLt: #DCFCE7;
+      --red:     #DC2626;
+      --redLt:   #FEE2E2;
+      --amber:   #D97706;
+      --amberLt: #FEF3C7;
+      --white:   #FFFFFF;
+      --gray:    #94A3B8;
+      --gray2:   #64748B;
+      --card:    #152233;
+      --border:  rgba(255,255,255,0.08);
+      --radius:  16px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      padding-bottom: calc(72px + var(--safe-bottom));
+    }
+
+    /* ── SCREEN SYSTEM ─────────────────────────────────────── */
+    .screen { display: none; min-height: 100dvh; }
+    .screen.active { display: block; }
+
+    /* ── LOGIN ─────────────────────────────────────────────── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 32px 24px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(13,148,136,0.2) 0%, transparent 60%),
+                  var(--navy);
+    }
+
+    .login-bus {
+      font-size: 72px;
+      margin-bottom: 8px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .login-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, var(--white), var(--tealLt));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-sub {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+
+    .login-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .input-field:focus { border-color: var(--teal); }
+    .input-field::placeholder { color: var(--gray2); }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--teal);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:hover { background: var(--teal2); }
+    .btn-primary.loading { opacity: 0.7; pointer-events: none; }
+
+    .error-msg {
+      color: var(--red);
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+
+    /* ── TOP BAR ───────────────────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,27,42,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 1px;
+    }
+
+    /* ── BOTTOM NAV ────────────────────────────────────────── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      background: rgba(13,27,42,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0 calc(8px + var(--safe-bottom));
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      color: var(--gray2);
+    }
+
+    .nav-item.active { color: var(--teal); }
+    .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-item .nav-label { font-size: 10px; font-weight: 500; }
+
+    /* ── MAIN CONTENT ──────────────────────────────────────── */
+    .content { padding: 0 16px 16px; }
+
+    /* ── CARDS ─────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-sm {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    /* ── DASHBOARD ─────────────────────────────────────────── */
+    .dash-hero {
+      background: linear-gradient(135deg, var(--navy3), var(--navy2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dash-hero::before {
+      content: '🚌';
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 80px;
+      opacity: 0.08;
+    }
+
+    .dash-mes {
+      font-size: 12px;
+      color: var(--tealLt);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .dash-valor {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .dash-label {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .progress-bar {
+      background: rgba(255,255,255,0.08);
+      border-radius: 100px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--teal2));
+      border-radius: 100px;
+      transition: width 0.8s ease;
+    }
+
+    .schools-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .school-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .school-name {
+      font-size: 11px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .school-count {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    /* ── NÃO PAGOU ─────────────────────────────────────────── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0 12px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .badge {
+      background: var(--red);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 100px;
+    }
+
+    .badge.green { background: var(--green); }
+    .badge.amber { background: var(--amber); }
+
+    .aluno-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .aluno-card:active { transform: scale(0.98); }
+
+    .aluno-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .avatar-ana { background: rgba(13,148,136,0.2); color: var(--teal2); }
+    .avatar-orig { background: rgba(217,119,6,0.2); color: var(--amber); }
+
+    .aluno-info { flex: 1; min-width: 0; }
+
+    .aluno-nome {
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+
+    .aluno-meta {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .aluno-valor {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red);
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .meses-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .mes-tag {
+      background: rgba(220,38,38,0.15);
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    /* ── BUSCA ─────────────────────────────────────────────── */
+    .search-box {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px 14px 44px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus { border-color: var(--teal); }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    /* ── MODAL ─────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px calc(24px + var(--safe-bottom));
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 100px;
+      margin: 0 auto 20px;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .select-field {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      outline: none;
+      appearance: none;
+    }
+
+    .select-field option { background: var(--navy2); }
+
+    .btn-secondary {
+      width: 100%;
+      background: transparent;
+      color: var(--gray);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:active { opacity: 0.7; }
+
+    /* ── TOAST ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--navy3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 500;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--teal); color: var(--tealLt); }
+    .toast.error { border-color: var(--red); color: #FCA5A5; }
+
+    /* ── LOADING ───────────────────────────────────────────── */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 400;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    /* ── EMPTY STATE ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--gray);
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; }
+
+    /* ── STATUS BADGE ──────────────────────────────────────── */
+    .status-pago { color: var(--green); font-size: 12px; font-weight: 600; }
+    .status-nao { color: var(--red); font-size: 12px; font-weight: 600; }
+    .status-na { color: var(--gray2); font-size: 12px; }
+
+    /* ── FAB ───────────────────────────────────────────────── */
+    .fab {
+      position: fixed;
+      bottom: calc(80px + var(--safe-bottom));
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: var(--teal);
+      border-radius: 18px;
+      border: none;
+      color: var(--white);
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(13,148,136,0.4);
+      transition: all 0.2s;
+      z-index: 150;
+    }
+
+    .fab:active { transform: scale(0.92); }
+  </style>
+</head>
+<body>
+
+<!-- ── TOAST ──────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── LOADING ────────────────────────────────────────────── -->
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Carregando...</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- LOGIN                                                    -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div id="login-screen" class="screen">
+  <div class="login-bus">🚌</div>
+  <div class="login-title">Tio Daniel</div>
+  <div class="login-sub">Sistema de Gestão Escolar</div>
+  <div class="login-card">
+    <label class="input-label">Senha</label>
+    <input type="password" id="login-password" class="input-field"
+           placeholder="Digite sua senha" autocomplete="current-password">
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="error-msg" id="login-error">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- APP                                                      -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div id="app-screen" class="screen">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">🚌 Tio Daniel</div>
+      <div class="topbar-sub" id="topbar-sub">Carregando...</div>
+    </div>
+    <button onclick="doLogout()" style="background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;">⏏️</button>
+  </div>
+
+  <!-- ── DASHBOARD ─────────────────────────────────────── -->
+  <div id="tab-dashboard" class="content" style="padding-top:16px;">
+    <div class="dash-hero">
+      <div class="dash-mes" id="dash-mes">Carregando...</div>
+      <div class="dash-valor" id="dash-recebido">R$ ---</div>
+      <div class="dash-label">recebido este mês</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="dash-pagaram" style="color:var(--green)">--</div>
+        <div class="stat-label">✅ Pagaram</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="dash-nao" style="color:var(--red)">--</div>
+        <div class="stat-label">❌ Pendentes</div>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="dash-progress" style="width:0%"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:13px;color:var(--gray)">Total Esperado</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;" id="dash-esperado">R$ ---</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--gray)">Pendente</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--amber);" id="dash-pendente">R$ ---</span>
+      </div>
+    </div>
+
+    <div class="schools-row">
+      <div class="school-card">
+        <div class="school-name">🔵 Ana Sofia</div>
+        <div class="school-count" style="color:var(--teal2)" id="dash-ana">--</div>
+        <div style="font-size:11px;color:var(--gray)">alunos</div>
+      </div>
+      <div class="school-card">
+        <div class="school-name">🟢 Origenes</div>
+        <div class="school-count" style="color:var(--amber)" id="dash-orig">--</div>
+        <div style="font-size:11px;color:var(--gray)">alunos</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="margin-top:16px;" onclick="showTab('tab-naopagou')">
+      Ver quem não pagou →
+    </button>
+  </div>
+
+  <!-- ── NÃO PAGOU ─────────────────────────────────────── -->
+  <div id="tab-naopagou" class="content" style="display:none;padding-top:16px;">
+    <div class="section-header">
+      <div class="section-title">🚨 Não Pagou</div>
+      <div class="badge" id="naopagou-badge">0</div>
+    </div>
+    <div id="naopagou-list"></div>
+  </div>
+
+  <!-- ── ALUNOS ─────────────────────────────────────────── -->
+  <div id="tab-alunos" class="content" style="display:none;padding-top:16px;">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" placeholder="Buscar aluno..."
+             id="search-input" oninput="filterAlunos(this.value)">
+    </div>
+    <div id="alunos-list"></div>
+  </div>
+
+  <!-- ── CADASTRAR ──────────────────────────────────────── -->
+  <div id="tab-cadastrar" class="content" style="display:none;padding-top:16px;">
+    <div class="section-title" style="margin-bottom:20px;">➕ Novo Aluno</div>
+
+    <div class="form-group">
+      <label class="input-label">Nome Completo</label>
+      <input type="text" id="cad-nome" class="input-field" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-group">
+      <label class="input-label">Escola</label>
+      <select id="cad-escola" class="select-field input-field">
+        <option value="">Selecione a escola</option>
+        <option value="Ana Sofia">Ana Sofia</option>
+        <option value="Origenes">Origenes</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="input-label">Telefone (opcional)</label>
+      <input type="tel" id="cad-tel" class="input-field" placeholder="11 99999-9999">
+    </div>
+    <div class="form-group">
+      <label class="input-label">Dia do Pagamento</label>
+      <input type="number" id="cad-dia" class="input-field" placeholder="Ex: 10" min="1" max="31">
+    </div>
+    <div class="form-group">
+      <label class="input-label">Mensalidade (R$)</label>
+      <input type="number" id="cad-valor" class="input-field" placeholder="Ex: 230" min="0" step="10">
+    </div>
+    <div class="form-group">
+      <label class="input-label">Serviço</label>
+      <select id="cad-servico" class="select-field input-field">
+        <option value="Ida e Volta">🔄 Ida e Volta — leva e busca</option>
+        <option value="Ida">➡️ Ida — só leva</option>
+        <option value="Volta">⬅️ Volta — só busca</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="input-label">Mês que Entrou</label>
+      <select id="cad-mes" class="select-field input-field">
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3" selected>Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="cadastrarAluno()">Cadastrar Aluno</button>
+  </div>
+
+</div><!-- /app-screen -->
+
+<!-- ── BOTTOM NAV ─────────────────────────────────────────── -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <button class="nav-item active" id="nav-dashboard" onclick="showTab('tab-dashboard')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Início</span>
+  </button>
+  <button class="nav-item" id="nav-naopagou" onclick="showTab('tab-naopagou')">
+    <span class="nav-icon">🚨</span>
+    <span class="nav-label">Devendo</span>
+  </button>
+  <button class="nav-item" id="nav-alunos" onclick="showTab('tab-alunos')">
+    <span class="nav-icon">👥</span>
+    <span class="nav-label">Alunos</span>
+  </button>
+  <button class="nav-item" id="nav-cadastrar" onclick="showTab('tab-cadastrar')">
+    <span class="nav-icon">➕</span>
+    <span class="nav-label">Cadastrar</span>
+  </button>
+</nav>
+
+<!-- ── MODAL MARCAR PAGO ──────────────────────────────────── -->
+<div class="modal-overlay" id="modal-pago">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Marcar como PAGO</div>
+    <div id="modal-pago-nome" style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--tealLt)"></div>
+    <div class="form-group">
+      <label class="input-label">Mês</label>
+      <select id="modal-mes" class="select-field input-field">
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3" selected>Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="confirmarPago()">✅ Confirmar PAGO</button>
+    <button class="btn-secondary" onclick="closeModal('modal-pago')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ── MODAL SAIU ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-saiu">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚪 Marcar como Saído</div>
+    <div id="modal-saiu-nome" style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--amber)"></div>
+    <div class="form-group">
+      <label class="input-label">Mês que saiu</label>
+      <select id="modal-saiu-mes" class="select-field input-field">
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3" selected>Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+    <button class="btn-primary" style="background:var(--amber);" onclick="confirmarSaiu()">Confirmar Saída</button>
+    <button class="btn-secondary" onclick="closeModal('modal-saiu')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIG — troque pela URL da sua API no Railway
+// ════════════════════════════════════════════════════════════
+const API_URL = 'https://web-production-74927.up.railway.app';
+
+// ── State ─────────────────────────────────────────────────
+let token = localStorage.getItem('td_token') || null;
+let alunosData = [];
+let selectedAluno = null;
+let mesAtual = new Date().getMonth() + 1;
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (token) {
+    showApp();
+  } else {
+    document.getElementById('login-screen').classList.add('active');
+  }
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
+// ── Auth ──────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  
+  btn.classList.add('loading');
+  btn.textContent = 'Entrando...';
+  err.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      token = data.token;
+      localStorage.setItem('td_token', token);
+      document.getElementById('login-screen').classList.remove('active');
+      showApp();
+    } else {
+      err.style.display = 'block';
+    }
+  } catch {
+    err.textContent = 'Erro de conexão. Tente novamente.';
+    err.style.display = 'block';
+  }
+  
+  btn.classList.remove('loading');
+  btn.textContent = 'Entrar';
+}
+
+function doLogout() {
+  token = null;
+  localStorage.removeItem('td_token');
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('login-screen').classList.add('active');
+  document.getElementById('login-password').value = '';
+}
+
+// ── Show App ──────────────────────────────────────────────
+function showApp() {
+  document.getElementById('app-screen').classList.add('active');
+  document.getElementById('bottom-nav').style.display = 'flex';
+  loadDashboard();
+  loadNaoPagou();
+  loadAlunos();
+}
+
+// ── API ───────────────────────────────────────────────────
+async function api(endpoint, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${API_URL}${endpoint}`, opts);
+  if (res.status === 401) { doLogout(); return null; }
+  return res.json();
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Tab Navigation ────────────────────────────────────────
+function showTab(tab) {
+  ['tab-dashboard','tab-naopagou','tab-alunos','tab-cadastrar'].forEach(t => {
+    document.getElementById(t).style.display = t === tab ? 'block' : 'none';
+  });
+  ['nav-dashboard','nav-naopagou','nav-alunos','nav-cadastrar'].forEach(n => {
+    document.getElementById(n).classList.remove('active');
+  });
+  const navMap = {
+    'tab-dashboard': 'nav-dashboard',
+    'tab-naopagou': 'nav-naopagou',
+    'tab-alunos': 'nav-alunos',
+    'tab-cadastrar': 'nav-cadastrar',
+  };
+  document.getElementById(navMap[tab]).classList.add('active');
+
+  const titles = {
+    'tab-dashboard': ['🚌 Tio Daniel', 'Visão geral'],
+    'tab-naopagou': ['🚨 Não Pagou', 'Pendências do mês'],
+    'tab-alunos': ['👥 Alunos', 'Todos os alunos'],
+    'tab-cadastrar': ['➕ Cadastrar', 'Novo aluno'],
+  };
+  document.getElementById('topbar-title').textContent = titles[tab][0];
+  document.getElementById('topbar-sub').textContent = titles[tab][1];
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const data = await api('/dashboard');
+    if (!data) return;
+    
+    const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    
+    document.getElementById('dash-mes').textContent = data.mes.toUpperCase();
+    document.getElementById('dash-recebido').textContent = fmt(data.total_recebido);
+    document.getElementById('dash-pagaram').textContent = data.pagaram;
+    document.getElementById('dash-nao').textContent = data.nao_pagaram;
+    document.getElementById('dash-esperado').textContent = fmt(data.total_esperado);
+    document.getElementById('dash-pendente').textContent = fmt(data.total_pendente);
+    document.getElementById('dash-ana').textContent = data.ana_sofia;
+    document.getElementById('dash-orig').textContent = data.origenes;
+    document.getElementById('dash-progress').style.width = data.pct_pago + '%';
+    document.getElementById('topbar-sub').textContent = `${data.mes} · ${data.total_ativos} alunos`;
+    
+    mesAtual = data.mes_num;
+    // Set default month in selects
+    document.querySelectorAll('#modal-mes, #modal-saiu-mes, #cad-mes').forEach(sel => {
+      sel.value = mesAtual;
+    });
+  } catch(e) {
+    console.error('Dashboard error:', e);
+  }
+}
+
+// ── Não Pagou ─────────────────────────────────────────────
+async function loadNaoPagou() {
+  try {
+    const data = await api('/naopagou');
+    if (!data) return;
+    
+    document.getElementById('naopagou-badge').textContent = data.total;
+    const list = document.getElementById('naopagou-list');
+    
+    if (!data.pendentes.length) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">Todos em dia!</div>
+        <div class="empty-sub">Nenhuma pendência este mês</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = data.pendentes.map(a => `
+      <div class="aluno-card" onclick="openPago('${a.nome.replace(/'/g,"\\'")}')">
+        <div class="aluno-avatar ${a.escola.includes('Ana') ? 'avatar-ana' : 'avatar-orig'}">
+          ${a.nome.charAt(0)}
+        </div>
+        <div class="aluno-info">
+          <div class="aluno-nome">${a.nome}</div>
+          <div class="aluno-meta">${a.escola} · Dia ${a.dia}</div>
+          <div class="meses-tags">
+            ${a.meses.map(m => `<span class="mes-tag">${m}</span>`).join('')}
+          </div>
+        </div>
+        <div class="aluno-valor">R$ ${a.total_devido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error('NaoPagou error:', e);
+  }
+}
+
+// ── Alunos ────────────────────────────────────────────────
+async function loadAlunos() {
+  try {
+    const data = await api('/alunos');
+    if (!data) return;
+    alunosData = data.alunos;
+    renderAlunos(alunosData);
+  } catch(e) {
+    console.error('Alunos error:', e);
+  }
+}
+
+function renderAlunos(list) {
+  const el = document.getElementById('alunos-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Nenhum resultado</div>
+      <div class="empty-sub">Tente outro nome</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(a => {
+    const statusClass = a.status_mes === 'PAGO' ? 'status-pago' : a.status_mes === 'NÃO' ? 'status-nao' : 'status-na';
+    const statusText = a.status_mes === 'PAGO' ? '✅ PAGO' : a.status_mes === 'NÃO' ? '❌ DEVE' : a.ativo ? '⏳' : '⛔ Saiu';
+    return `
+    <div class="aluno-card" onclick="openAlunoMenu('${a.nome.replace(/'/g,"\\'")}', ${a.ativo})">
+      <div class="aluno-avatar ${a.escola.includes('Ana') ? 'avatar-ana' : 'avatar-orig'}">
+        ${a.nome.charAt(0)}
+      </div>
+      <div class="aluno-info">
+        <div class="aluno-nome">${a.nome}</div>
+        <div class="aluno-meta">${a.escola} · Dia ${a.dia} · R$ ${a.valor}</div>
+      </div>
+      <div class="${statusClass}">${statusText}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterAlunos(q) {
+  const filtered = q ? alunosData.filter(a => a.nome.toLowerCase().includes(q.toLowerCase())) : alunosData;
+  renderAlunos(filtered);
+}
+
+// ── Modals ────────────────────────────────────────────────
+function openPago(nome) {
+  selectedAluno = nome;
+  document.getElementById('modal-pago-nome').textContent = nome;
+  document.getElementById('modal-mes').value = mesAtual;
+  document.getElementById('modal-pago').classList.add('active');
+}
+
+function openAlunoMenu(nome, ativo) {
+  selectedAluno = nome;
+  if (ativo) {
+    document.getElementById('modal-pago-nome').textContent = nome;
+    document.getElementById('modal-mes').value = mesAtual;
+    document.getElementById('modal-pago').classList.add('active');
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+async function confirmarPago() {
+  const mes = parseInt(document.getElementById('modal-mes').value);
+  closeModal('modal-pago');
+  
+  try {
+    const data = await api('/pago', 'POST', { nome: selectedAluno, mes });
+    if (data && !data.error) {
+      showToast(data.message, 'success');
+      loadDashboard();
+      loadNaoPagou();
+      loadAlunos();
+    } else {
+      showToast(data?.error || 'Erro ao marcar PAGO', 'error');
+    }
+  } catch {
+    showToast('Erro de conexão', 'error');
+  }
+}
+
+async function confirmarSaiu() {
+  const mes = parseInt(document.getElementById('modal-saiu-mes').value);
+  closeModal('modal-saiu');
+  
+  try {
+    const data = await api('/saiu', 'POST', { nome: selectedAluno, mes_saiu: mes });
+    if (data && !data.error) {
+      showToast(data.message, 'success');
+      loadDashboard();
+      loadAlunos();
+    } else {
+      showToast(data?.error || 'Erro', 'error');
+    }
+  } catch {
+    showToast('Erro de conexão', 'error');
+  }
+}
+
+// ── Cadastrar ─────────────────────────────────────────────
+async function cadastrarAluno() {
+  const nome    = document.getElementById('cad-nome').value.trim();
+  const escola  = document.getElementById('cad-escola').value;
+  const tel     = document.getElementById('cad-tel').value.trim();
+  const dia     = document.getElementById('cad-dia').value;
+  const valor   = document.getElementById('cad-valor').value;
+  const servico = document.getElementById('cad-servico').value;
+  const mes     = document.getElementById('cad-mes').value;
+
+  if (!nome || !escola || !dia || !valor) {
+    showToast('Preencha todos os campos obrigatórios', 'error');
+    return;
+  }
+
+  try {
+    const data = await api('/cadastrar', 'POST', {
+      nome, escola, tel, dia, valor: parseFloat(valor),
+      servico, mes_entrou: parseInt(mes)
+    });
+    if (data && !data.error) {
+      showToast(data.message, 'success');
+      // Limpa o formulário
+      ['cad-nome','cad-tel','cad-dia','cad-valor'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('cad-escola').value = '';
+      loadDashboard();
+      loadAlunos();
+    } else {
+      showToast(data?.error || 'Erro ao cadastrar', 'error');
+    }
+  } catch {
+    showToast('Erro de conexão', 'error');
+  }
+}
+
+// Fecha modal ao clicar fora
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
+});
+</script>
+</body>
+</html>
