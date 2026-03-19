@@ -986,12 +986,21 @@ let mesAtual = new Date().getMonth() + 1;
 
 // ── Init ──────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  document.getElementById('loading-screen').style.display = 'none';
+  // Esconde loading imediatamente sempre
+  const ls = document.getElementById('loading-screen');
+  ls.style.display = 'none';
+  
   if (token) {
     showApp();
   } else {
     document.getElementById('login-screen').classList.add('active');
   }
+  // Fallback — garante que loading some após 2s
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (ls) ls.style.display = 'none';
+  }, 2000);
+  
   document.getElementById('login-password').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
@@ -1050,10 +1059,10 @@ function confirmLogout() {
 function showApp() {
   document.getElementById('app-screen').classList.add('active');
   document.getElementById('bottom-nav').style.display = 'flex';
-  loadDashboard();
+  // Load data independently — não bloqueia a UI
+  loadDashboard().then(() => loadResumoAnual());
   loadNaoPagou();
   loadAlunos();
-  loadResumoAnual();
 }
 
 // ── API ───────────────────────────────────────────────────
@@ -1109,7 +1118,7 @@ function showTab(tab) {
 async function loadDashboard() {
   try {
     const data = await api('/dashboard');
-    if (!data) return;
+    if (!data) return data;
     
     const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2});
     
