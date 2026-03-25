@@ -818,7 +818,7 @@
 </div><!-- /app-screen -->
 
 <!-- ── GASTOS TAB ────────────────────────────────────────────── -->
-<div id="tab-gastos" class="content" style="display:none;padding-top:16px;">
+<div id="tab-gastos" style="display:none;padding:16px 16px 80px;">
 
   <!-- Seletor de mês -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1172,6 +1172,7 @@ function showTab(tab) {
   };
   document.getElementById('topbar-title').textContent = titles[tab][0];
   if (tab === 'tab-gastos') loadGastos();
+  window.scrollTo(0, 0);
   document.getElementById('topbar-sub').textContent = titles[tab][1];
 }
 
@@ -1494,22 +1495,33 @@ async function loadGastos() {
     document.getElementById('gastos-lucro').textContent = fmt(lucro);
     document.getElementById('gastos-total-pendente').textContent = fmt(data.total_pendente);
 
-    const html = data.gastos.map(g => {
+    // Separa fixos dos outros
+    const fixos = data.gastos.filter(g => !g.is_outro);
+    const outros = data.gastos.filter(g => g.is_outro);
+
+    const renderGasto = g => {
       const corBg = g.pago ? 'rgba(22,163,74,0.08)' : g.vazio ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)';
       const corBorder = g.pago ? 'rgba(22,163,74,0.3)' : 'var(--border)';
-      const nomeStyle = g.vazio ? 'color:var(--gray2);font-style:italic;' : g.pago ? 'color:var(--white);' : 'color:var(--white);';
-      const valorTxt = g.valor > 0 ? fmt(g.valor) : g.vazio ? '+ adicionar' : 'sem valor';
+      const valorTxt = g.valor > 0 ? fmt(g.valor) : g.vazio ? '+ adicionar' : '—';
       const valorColor = g.vazio ? 'var(--teal)' : g.pago ? 'var(--green)' : 'var(--amber)';
-
-      return `<div style="background:${corBg};border:1px solid ${corBorder};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;" 
+      const icone = g.pago ? '✅' : g.vazio ? '➕' : '⏳';
+      const nomeColor = g.vazio ? 'color:var(--gray2);font-style:italic;' : 'color:var(--white);';
+      return `<div style="background:${corBg};border:1px solid ${corBorder};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;" 
               onclick="abrirGasto(${g.row}, '${g.nome.replace(/'/g,"\'")}', ${g.valor}, ${g.pago}, ${g.is_outro}, ${g.vazio})">
-        <div style="font-size:20px;">${g.pago ? '✅' : g.vazio ? '➕' : '⏳'}</div>
+        <div style="font-size:20px;">${icone}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:600;${nomeStyle}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.nome}</div>
+          <div style="font-size:14px;font-weight:600;${nomeColor}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.nome}</div>
         </div>
         <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:${valorColor};flex-shrink:0;">${valorTxt}</div>
       </div>`;
-    }).join('');
+    };
+
+    const html = `
+      <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;font-weight:600;">Gastos Fixos</div>
+      ${fixos.map(renderGasto).join('')}
+      <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 8px;font-weight:600;">Gastos Extras</div>
+      ${outros.map(renderGasto).join('')}
+    `;
 
     document.getElementById('gastos-list').innerHTML = html || '<div style="text-align:center;color:var(--gray);padding:32px;">Nenhum gasto</div>';
   } catch(e) {
@@ -1535,13 +1547,14 @@ function abrirGasto(row, nome, valor, pago, isOutro, vazio) {
 async function salvarGasto() {
   const row   = parseInt(document.getElementById('modal-gasto-row').value);
   const nome  = document.getElementById('modal-gasto-nome').value.trim();
-  const valor = parseFloat(document.getElementById('modal-gasto-valor').value) || 0;
+  const valorStr = document.getElementById('modal-gasto-valor').value;
+  const valor = valorStr ? parseFloat(valorStr) : 0;
   closeModal('modal-gasto');
 
   try {
     const data = await api('/gastos/valor', 'POST', { row, valor, nome });
     if (data && !data.error) {
-      showToast('✅ Valor salvo!', 'success');
+      showToast('✅ Gasto salvo!', 'success');
       loadGastos();
     } else {
       showToast(data?.error || 'Erro', 'error');
