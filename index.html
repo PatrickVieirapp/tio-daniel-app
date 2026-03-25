@@ -817,6 +817,56 @@
 
 </div><!-- /app-screen -->
 
+<!-- ── GASTOS TAB ────────────────────────────────────────────── -->
+<div id="tab-gastos" class="content" style="display:none;padding-top:16px;">
+
+  <!-- Seletor de mês -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <button onclick="mudarMesGastos(-1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer;">‹</button>
+    <div style="text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;" id="gastos-mes-label">Março</div>
+      <div style="font-size:11px;color:var(--gray);">2026</div>
+    </div>
+    <button onclick="mudarMesGastos(1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer;">›</button>
+  </div>
+
+  <!-- Cards resumo -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+    <div class="stat-card">
+      <div class="stat-val" id="gastos-total-pago" style="color:var(--green);font-size:18px;">R$ --</div>
+      <div class="stat-label">✅ Pago</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="gastos-total-pendente" style="color:var(--red);font-size:18px;">R$ --</div>
+      <div class="stat-label">⏳ Pendente</div>
+    </div>
+  </div>
+
+  <!-- Lista de gastos -->
+  <div id="gastos-list"></div>
+
+</div>
+
+<!-- ── MODAL GASTO ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-gasto">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-gasto-titulo">Gasto</div>
+    <input type="hidden" id="modal-gasto-row">
+    <div class="form-group" id="modal-gasto-nome-group" style="display:none;">
+      <label class="input-label">Descrição</label>
+      <input type="text" id="modal-gasto-nome" class="input-field" placeholder="Ex: Mercado, Farmácia...">
+    </div>
+    <div class="form-group">
+      <label class="input-label">Valor (R$)</label>
+      <input type="number" id="modal-gasto-valor" class="input-field" placeholder="0,00" step="0.01" min="0">
+    </div>
+    <button class="btn-primary" style="margin-bottom:10px;" onclick="salvarGasto()">💾 Salvar valor</button>
+    <button class="btn-primary" id="modal-gasto-pago-btn" style="margin-bottom:10px;background:var(--green);" onclick="togglePagoGasto()">✅ Marcar como PAGO</button>
+    <button class="btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button>
+  </div>
+</div>
+
 <!-- ── BOTTOM NAV ─────────────────────────────────────────── -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
   <button class="nav-item active" id="nav-dashboard" onclick="showTab('tab-dashboard')">
@@ -834,6 +884,10 @@
   <button class="nav-item" id="nav-cadastrar" onclick="showTab('tab-cadastrar')">
     <span class="nav-icon">➕</span>
     <span class="nav-label">Cadastrar</span>
+  </button>
+  <button class="nav-item" id="nav-gastos" onclick="showTab('tab-gastos')">
+    <span class="nav-icon">💸</span>
+    <span class="nav-label">Gastos</span>
   </button>
 </nav>
 
@@ -1084,10 +1138,10 @@ function showToast(msg, type='success') {
 
 // ── Tab Navigation ────────────────────────────────────────
 function showTab(tab) {
-  ['tab-dashboard','tab-naopagou','tab-alunos','tab-cadastrar'].forEach(t => {
+  ['tab-dashboard','tab-naopagou','tab-alunos','tab-cadastrar','tab-gastos'].forEach(t => {
     document.getElementById(t).style.display = t === tab ? 'block' : 'none';
   });
-  ['nav-dashboard','nav-naopagou','nav-alunos','nav-cadastrar'].forEach(n => {
+  ['nav-dashboard','nav-naopagou','nav-alunos','nav-cadastrar','nav-gastos'].forEach(n => {
     document.getElementById(n).classList.remove('active');
   });
   const navMap = {
@@ -1095,6 +1149,7 @@ function showTab(tab) {
     'tab-naopagou': 'nav-naopagou',
     'tab-alunos': 'nav-alunos',
     'tab-cadastrar': 'nav-cadastrar',
+    'tab-gastos': 'nav-gastos',
   };
   document.getElementById(navMap[tab]).classList.add('active');
 
@@ -1103,8 +1158,10 @@ function showTab(tab) {
     'tab-naopagou': ['🚨 Não Pagou', 'Pendências do mês'],
     'tab-alunos': ['👥 Alunos', 'Todos os alunos'],
     'tab-cadastrar': ['➕ Cadastrar', 'Novo aluno'],
+    'tab-gastos': ['💸 Gastos', 'Gastos mensais'],
   };
   document.getElementById('topbar-title').textContent = titles[tab][0];
+  if (tab === 'tab-gastos') loadGastos();
   document.getElementById('topbar-sub').textContent = titles[tab][1];
 }
 
@@ -1391,6 +1448,101 @@ function openSaiuFromHist() {
 }
 
 
+
+// ── Gastos ────────────────────────────────────────────────────
+let mesGastos = new Date().getMonth() + 1;
+const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function mudarMesGastos(delta) {
+  mesGastos = Math.max(1, Math.min(12, mesGastos + delta));
+  loadGastos();
+}
+
+async function loadGastos() {
+  document.getElementById('gastos-mes-label').textContent = MESES_NOMES[mesGastos - 1];
+  document.getElementById('gastos-list').innerHTML = '<div style="text-align:center;color:var(--gray);padding:32px;">Carregando...</div>';
+
+  try {
+    const data = await api(`/gastos?mes=${mesGastos}`);
+    if (!data || data.error) {
+      document.getElementById('gastos-list').innerHTML = '<div style="text-align:center;color:var(--red);padding:32px;">Erro ao carregar</div>';
+      return;
+    }
+
+    const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    document.getElementById('gastos-total-pago').textContent = fmt(data.total_pago);
+    document.getElementById('gastos-total-pendente').textContent = fmt(data.total_pendente);
+
+    const html = data.gastos.map(g => {
+      const corBg = g.pago ? 'rgba(22,163,74,0.08)' : g.vazio ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)';
+      const corBorder = g.pago ? 'rgba(22,163,74,0.3)' : 'var(--border)';
+      const nomeStyle = g.vazio ? 'color:var(--gray2);font-style:italic;' : g.pago ? 'color:var(--white);' : 'color:var(--white);';
+      const valorTxt = g.valor > 0 ? fmt(g.valor) : g.vazio ? '+ adicionar' : 'sem valor';
+      const valorColor = g.vazio ? 'var(--teal)' : g.pago ? 'var(--green)' : 'var(--amber)';
+
+      return `<div style="background:${corBg};border:1px solid ${corBorder};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;" 
+              onclick="abrirGasto(${g.row}, '${g.nome.replace(/'/g,"\'")}', ${g.valor}, ${g.pago}, ${g.is_outro}, ${g.vazio})">
+        <div style="font-size:20px;">${g.pago ? '✅' : g.vazio ? '➕' : '⏳'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;${nomeStyle}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.nome}</div>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:${valorColor};flex-shrink:0;">${valorTxt}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('gastos-list').innerHTML = html || '<div style="text-align:center;color:var(--gray);padding:32px;">Nenhum gasto</div>';
+  } catch(e) {
+    document.getElementById('gastos-list').innerHTML = '<div style="text-align:center;color:var(--red);padding:32px;">Erro de conexão</div>';
+  }
+}
+
+// Modal de gasto
+let gastoAtual = null;
+
+function abrirGasto(row, nome, valor, pago, isOutro, vazio) {
+  gastoAtual = { row, nome, valor, pago, isOutro, vazio };
+  document.getElementById('modal-gasto-titulo').textContent = vazio ? '➕ Adicionar gasto' : nome;
+  document.getElementById('modal-gasto-row').value = row;
+  document.getElementById('modal-gasto-nome').value = vazio ? '' : nome;
+  document.getElementById('modal-gasto-valor').value = valor || '';
+  document.getElementById('modal-gasto-nome-group').style.display = (isOutro || vazio) ? 'block' : 'none';
+  document.getElementById('modal-gasto-pago-btn').textContent = pago ? '❌ Desmarcar PAGO' : '✅ Marcar como PAGO';
+  document.getElementById('modal-gasto-pago-btn').style.background = pago ? 'var(--gray2)' : 'var(--green)';
+  document.getElementById('modal-gasto').classList.add('active');
+}
+
+async function salvarGasto() {
+  const row   = parseInt(document.getElementById('modal-gasto-row').value);
+  const nome  = document.getElementById('modal-gasto-nome').value.trim();
+  const valor = parseFloat(document.getElementById('modal-gasto-valor').value) || 0;
+  closeModal('modal-gasto');
+
+  try {
+    const data = await api('/gastos/valor', 'POST', { row, valor, nome });
+    if (data && !data.error) {
+      showToast('✅ Valor salvo!', 'success');
+      loadGastos();
+    } else {
+      showToast(data?.error || 'Erro', 'error');
+    }
+  } catch { showToast('Erro de conexão', 'error'); }
+}
+
+async function togglePagoGasto() {
+  const row  = parseInt(document.getElementById('modal-gasto-row').value);
+  const pago = gastoAtual?.pago;
+  closeModal('modal-gasto');
+
+  try {
+    const data = await api('/gastos/pago', 'POST', { row, pago: !pago });
+    if (data && !data.error) {
+      showToast(data.message, 'success');
+      loadGastos();
+    } else {
+      showToast(data?.error || 'Erro', 'error');
+    }
+  } catch { showToast('Erro de conexão', 'error'); }
+}
 
 // Fecha modal ao clicar fora
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
