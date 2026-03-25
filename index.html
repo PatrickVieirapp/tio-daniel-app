@@ -818,42 +818,41 @@
 </div><!-- /app-screen -->
 
 <!-- ── GASTOS TAB ────────────────────────────────────────────── -->
-<div id="tab-gastos" style="display:none;padding-bottom:80px;">
+<div id="tab-gastos" class="content" style="display:none;padding-top:16px;">
 
   <!-- Seletor de mês -->
-  <div style="background:var(--navy2);border-bottom:1px solid var(--border);padding:14px 16px 12px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <button onclick="mudarMesGastos(-1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:42px;height:42px;border-radius:12px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
-      <div style="text-align:center;">
-        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;" id="gastos-mes-label">Março</div>
-        <div style="font-size:11px;color:var(--gray);">2026</div>
-      </div>
-      <button onclick="mudarMesGastos(1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:42px;height:42px;border-radius:12px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <button onclick="mudarMesGastos(-1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:42px;height:42px;border-radius:12px;font-size:20px;cursor:pointer;">‹</button>
+    <div style="text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;" id="gastos-mes-label">Março</div>
+      <div style="font-size:11px;color:var(--gray);">2026</div>
     </div>
-    <!-- 4 cards de resumo -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-      <div style="background:rgba(13,148,136,0.15);border:1px solid rgba(13,148,136,0.3);border-radius:10px;padding:10px 6px;text-align:center;">
-        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:var(--teal2);white-space:nowrap;overflow:hidden;" id="gastos-recebido">--</div>
-        <div style="font-size:9px;color:var(--gray);margin-top:2px;">Recebido</div>
-      </div>
-      <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.25);border-radius:10px;padding:10px 6px;text-align:center;">
-        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#FCA5A5;white-space:nowrap;overflow:hidden;" id="gastos-total-pago">--</div>
-        <div style="font-size:9px;color:var(--gray);margin-top:2px;">Gasto</div>
-      </div>
-      <div style="background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:10px 6px;text-align:center;">
-        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#86EFAC;white-space:nowrap;overflow:hidden;" id="gastos-lucro">--</div>
-        <div style="font-size:9px;color:var(--gray);margin-top:2px;">Lucro</div>
-      </div>
-      <div style="background:rgba(217,119,6,0.12);border:1px solid rgba(217,119,6,0.25);border-radius:10px;padding:10px 6px;text-align:center;">
-        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#FCD34D;white-space:nowrap;overflow:hidden;" id="gastos-total-pendente">--</div>
-        <div style="font-size:9px;color:var(--gray);margin-top:2px;">Pendente</div>
-      </div>
+    <button onclick="mudarMesGastos(1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:42px;height:42px;border-radius:12px;font-size:20px;cursor:pointer;">›</button>
+  </div>
+
+  <!-- 4 cards de resumo -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+    <div style="background:rgba(13,148,136,0.15);border:1px solid rgba(13,148,136,0.3);border-radius:10px;padding:10px 4px;text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--teal2);" id="gastos-recebido">--</div>
+      <div style="font-size:9px;color:var(--gray);margin-top:2px;">Recebido</div>
+    </div>
+    <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.25);border-radius:10px;padding:10px 4px;text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#FCA5A5;" id="gastos-total-pago">--</div>
+      <div style="font-size:9px;color:var(--gray);margin-top:2px;">Gasto</div>
+    </div>
+    <div style="background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.25);border-radius:10px;padding:10px 4px;text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#86EFAC;" id="gastos-lucro">--</div>
+      <div style="font-size:9px;color:var(--gray);margin-top:2px;">Lucro</div>
+    </div>
+    <div style="background:rgba(217,119,6,0.12);border:1px solid rgba(217,119,6,0.25);border-radius:10px;padding:10px 4px;text-align:center;">
+      <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#FCD34D;" id="gastos-total-pendente">--</div>
+      <div style="font-size:9px;color:var(--gray);margin-top:2px;">Pendente</div>
     </div>
   </div>
 
   <!-- Lista -->
-  <div style="padding:12px 16px 0;" id="gastos-list">
-    <div style="text-align:center;color:var(--gray);padding:40px;">Selecione o mês acima</div>
+  <div id="gastos-list">
+    <div style="text-align:center;color:var(--gray);padding:40px;">Carregando...</div>
   </div>
 
 </div>
