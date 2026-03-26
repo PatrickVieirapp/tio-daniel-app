@@ -862,9 +862,9 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-gasto-titulo">Gasto</div>
     <input type="hidden" id="modal-gasto-row">
-    <div class="form-group" id="modal-gasto-nome-group" style="display:none;">
-      <label class="input-label">Descrição</label>
-      <input type="text" id="modal-gasto-nome" class="input-field" placeholder="Ex: Mercado, Farmácia...">
+    <div class="form-group" id="modal-gasto-nome-group">
+      <label class="input-label">Nome do gasto</label>
+      <input type="text" id="modal-gasto-nome" class="input-field" placeholder="Ex: Diesel, Mercado...">
     </div>
     <div class="form-group">
       <label class="input-label">Valor (R$)</label>
@@ -872,6 +872,7 @@
     </div>
     <button class="btn-primary" style="margin-bottom:10px;" onclick="salvarGasto()">💾 Salvar valor</button>
     <button class="btn-primary" id="modal-gasto-pago-btn" style="margin-bottom:10px;background:var(--green);" onclick="togglePagoGasto()">✅ Marcar como PAGO</button>
+    <button class="btn-primary" style="margin-bottom:10px;background:var(--red);opacity:0.85;" onclick="limparGasto()">🗑️ Limpar gasto</button>
     <button class="btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button>
   </div>
 </div>
@@ -1540,7 +1541,7 @@ function abrirGasto(row, nome, valor, pago, isOutro, vazio) {
   document.getElementById('modal-gasto-row').value = row;
   document.getElementById('modal-gasto-nome').value = vazio ? '' : nome;
   document.getElementById('modal-gasto-valor').value = valor || '';
-  document.getElementById('modal-gasto-nome-group').style.display = (isOutro || vazio) ? 'block' : 'none';
+  document.getElementById('modal-gasto-nome-group').style.display = 'block';
   document.getElementById('modal-gasto-pago-btn').textContent = pago ? '❌ Desmarcar PAGO' : '✅ Marcar como PAGO';
   document.getElementById('modal-gasto-pago-btn').style.background = pago ? 'var(--gray2)' : 'var(--green)';
   document.getElementById('modal-gasto').classList.add('active');
@@ -1557,6 +1558,23 @@ async function salvarGasto() {
     const data = await api('/gastos/valor', 'POST', { row, valor, nome });
     if (data && !data.error) {
       showToast('✅ Gasto salvo!', 'success');
+      loadGastos();
+    } else {
+      showToast(data?.error || 'Erro', 'error');
+    }
+  } catch { showToast('Erro de conexão', 'error'); }
+}
+
+async function limparGasto() {
+  const row = parseInt(document.getElementById('modal-gasto-row').value);
+  if (!confirm('Limpar este gasto? Nome e valor serão apagados.')) return;
+  closeModal('modal-gasto');
+  try {
+    const data = await api('/gastos/valor', 'POST', { row, valor: 0, nome: '' });
+    if (data && !data.error) {
+      // Also clear PAGO status
+      await api('/gastos/pago', 'POST', { row, pago: false });
+      showToast('🗑️ Gasto limpo!', 'success');
       loadGastos();
     } else {
       showToast(data?.error || 'Erro', 'error');
