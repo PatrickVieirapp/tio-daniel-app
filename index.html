@@ -879,6 +879,10 @@
       <input type="text" id="modal-gasto-nome" class="input-field" placeholder="Ex: Diesel, Mercado...">
     </div>
     <div class="form-group">
+      <label class="input-label">Dia do pagamento (opcional)</label>
+      <input type="number" id="modal-gasto-dia" class="input-field" placeholder="Ex: 15" min="1" max="31">
+    </div>
+    <div class="form-group">
       <label class="input-label">Valor (R$)</label>
       <input type="number" id="modal-gasto-valor" class="input-field" placeholder="0,00" step="0.01" min="0">
     </div>
@@ -1560,7 +1564,16 @@ function abrirGasto(row, nome, valor, pago, isOutro, vazio) {
   gastoAtual = { row, nome, valor, pago, isOutro, vazio };
   document.getElementById('modal-gasto-titulo').textContent = vazio ? '➕ Adicionar gasto' : nome;
   document.getElementById('modal-gasto-row').value = row;
-  document.getElementById('modal-gasto-nome').value = vazio ? '' : nome;
+  // Extrai dia do nome se existir (ex: "Aluguel - dia 15")
+  let nomeBase = vazio ? '' : nome;
+  let diaVal = '';
+  const diaMatch = nome.match(/ - dia (\d+)/i);
+  if (diaMatch) {
+    nomeBase = nome.replace(diaMatch[0], '').trim();
+    diaVal = diaMatch[1];
+  }
+  document.getElementById('modal-gasto-nome').value = nomeBase;
+  document.getElementById('modal-gasto-dia').value = diaVal;
   document.getElementById('modal-gasto-valor').value = valor || '';
   document.getElementById('modal-gasto-nome-group').style.display = 'block';
   document.getElementById('modal-gasto-pago-btn').textContent = pago ? '❌ Desmarcar PAGO' : '✅ Marcar como PAGO';
@@ -1569,8 +1582,10 @@ function abrirGasto(row, nome, valor, pago, isOutro, vazio) {
 }
 
 async function salvarGasto() {
-  const row   = parseInt(document.getElementById('modal-gasto-row').value);
-  const nome  = document.getElementById('modal-gasto-nome').value.trim();
+  const row      = parseInt(document.getElementById('modal-gasto-row').value);
+  const nomeBase = document.getElementById('modal-gasto-nome').value.trim();
+  const dia      = document.getElementById('modal-gasto-dia').value.trim();
+  const nome     = dia ? nomeBase + ' - dia ' + dia : nomeBase;
   const valorStr = document.getElementById('modal-gasto-valor').value;
   const valor = valorStr ? parseFloat(valorStr) : 0;
   closeModal('modal-gasto');
