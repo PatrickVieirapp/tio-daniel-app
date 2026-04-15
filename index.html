@@ -1167,25 +1167,28 @@ window.addEventListener('load', () => {
   // Esconde loading imediatamente sempre
   startLoadingMsgs();
   const ls = document.getElementById('loading-screen');
-  // Hide after short delay to show the loading screen briefly
-  setTimeout(() => {
-    ls.style.display = 'none';
-    stopLoadingMsgs();
-  }, token ? 800 : 300);
+
+  const hideLoading = () => {
+    if (ls) { ls.style.display = 'none'; stopLoadingMsgs(); }
+  };
+
+  if (token) {
+    // Tem token — pinga API e aguarda ela acordar
+    showApp();
+    fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(65000) })
+      .then(hideLoading).catch(hideLoading);
+    setTimeout(hideLoading, 65000); // fallback máximo
+  } else {
+    // Sem token — login rápido
+    setTimeout(hideLoading, 400);
+  }
   
   if (token) {
     showApp();
   } else {
     document.getElementById('login-screen').classList.add('active');
   }
-  // Fallback — garante que loading some após 5s
-  setTimeout(() => {
-    const ls = document.getElementById('loading-screen');
-    if (ls && ls.style.display !== 'none') {
-      ls.style.display = 'none';
-      stopLoadingMsgs();
-    }
-  }, 5000);
+
   
   document.getElementById('login-password').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
