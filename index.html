@@ -831,6 +831,15 @@
 
   <!-- ── NÃO PAGOU ─────────────────────────────────────── -->
   <div id="tab-naopagou" class="content" style="display:none;padding-top:16px;">
+    <!-- Seletor de mês -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <button onclick="mudarMesNaoPagou(-1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer;">‹</button>
+      <div style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;" id="naopagou-mes-label">Abril</div>
+        <div style="font-size:10px;color:var(--gray);">toque para mudar o mês</div>
+      </div>
+      <button onclick="mudarMesNaoPagou(1)" style="background:var(--card);border:1px solid var(--border);color:var(--white);width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer;">›</button>
+    </div>
     <div class="section-header">
       <div class="section-title">🚨 Não Pagou</div>
       <div class="badge" id="naopagou-badge">0</div>
@@ -1346,9 +1355,19 @@ async function loadDashboard() {
 }
 
 // ── Não Pagou ─────────────────────────────────────────────
+let mesNaoPagou = new Date().getMonth() + 1;
+const MESES_NP = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function mudarMesNaoPagou(delta) {
+  mesNaoPagou = Math.max(1, Math.min(12, mesNaoPagou + delta));
+  loadNaoPagou();
+}
+
 async function loadNaoPagou() {
+  const labelEl = document.getElementById('naopagou-mes-label');
+  if (labelEl) labelEl.textContent = MESES_NP[mesNaoPagou - 1];
   try {
-    const data = await api('/naopagou');
+    const data = await api('/naopagou?mes=' + mesNaoPagou);
     if (!data) return;
     
     document.getElementById('naopagou-badge').textContent = data.total;
