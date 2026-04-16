@@ -983,6 +983,20 @@
 </div><!-- /app-screen -->
 
 
+<!-- ── RESUMO ANUAL TAB ──────────────────────────────────────── -->
+<div id="tab-resumo" class="content" style="display:none;padding-top:16px;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div class="section-title">📅 Resumo 2026</div>
+    <div id="resumo-total-ano" style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--teal2);">--</div>
+  </div>
+
+  <div id="resumo-list">
+    <div style="text-align:center;color:var(--gray);padding:40px;">Carregando...</div>
+  </div>
+
+</div>
+
 <!-- ── BOTTOM NAV ─────────────────────────────────────────── -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
   <button class="nav-item active" id="nav-dashboard" onclick="showTab('tab-dashboard')">
@@ -1004,6 +1018,10 @@
   <button class="nav-item" id="nav-gastos" onclick="showTab('tab-gastos')">
     <span class="nav-icon">💸</span>
     <span class="nav-label">Gastos</span>
+  </button>
+  <button class="nav-item" id="nav-resumo" onclick="showTab('tab-resumo')">
+    <span class="nav-icon">📅</span>
+    <span class="nav-label">Ano</span>
   </button>
 </nav>
 
@@ -1296,10 +1314,10 @@ function showToast(msg, type='success') {
 
 // ── Tab Navigation ────────────────────────────────────────
 function showTab(tab) {
-  ['tab-dashboard','tab-naopagou','tab-alunos','tab-cadastrar','tab-gastos'].forEach(t => {
+  ['tab-dashboard','tab-naopagou','tab-alunos','tab-cadastrar','tab-gastos','tab-resumo'].forEach(t => {
     document.getElementById(t).style.display = t === tab ? 'block' : 'none';
   });
-  ['nav-dashboard','nav-naopagou','nav-alunos','nav-cadastrar','nav-gastos'].forEach(n => {
+  ['nav-dashboard','nav-naopagou','nav-alunos','nav-cadastrar','nav-gastos','nav-resumo'].forEach(n => {
     document.getElementById(n).classList.remove('active');
   });
   const navMap = {
@@ -1308,6 +1326,7 @@ function showTab(tab) {
     'tab-alunos': 'nav-alunos',
     'tab-cadastrar': 'nav-cadastrar',
     'tab-gastos': 'nav-gastos',
+    'tab-resumo': 'nav-resumo',
   };
   document.getElementById(navMap[tab]).classList.add('active');
 
@@ -1317,9 +1336,11 @@ function showTab(tab) {
     'tab-alunos': ['👥 Alunos', 'Todos os alunos'],
     'tab-cadastrar': ['➕ Cadastrar', 'Novo aluno'],
     'tab-gastos': ['💸 Gastos', 'Gastos mensais'],
+    'tab-resumo': ['📅 Ano 2026', 'Resumo anual'],
   };
   document.getElementById('topbar-title').textContent = titles[tab][0];
   if (tab === 'tab-gastos') loadGastos();
+  if (tab === 'tab-resumo') loadResumoAnual();
   window.scrollTo(0, 0);
   document.getElementById('topbar-sub').textContent = titles[tab][1];
 }
@@ -1763,6 +1784,67 @@ async function togglePagoGasto() {
       showToast(data?.error || 'Erro', 'error');
     }
   } catch { showToast('Erro de conexão', 'error'); }
+}
+
+// ── Resumo Anual ──────────────────────────────────────────────
+async function loadResumoAnual() {
+  document.getElementById('resumo-list').innerHTML =
+    '<div style="text-align:center;color:var(--gray);padding:40px;">Carregando...</div>';
+
+  try {
+    const data = await api('/resumo-anual');
+    if (!data || data.error) {
+      document.getElementById('resumo-list').innerHTML =
+        '<div style="text-align:center;color:var(--red);padding:40px;">Erro ao carregar</div>';
+      return;
+    }
+
+    const fmt = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+    document.getElementById('resumo-total-ano').textContent = fmt(data.total_ano) + ' no ano';
+
+    const html = data.resumo.map(m => {
+      const isFuturo = m.situacao === 'futuro';
+      const isAtual  = m.atual;
+      const isCompleto = m.situacao === 'completo';
+
+      const icone = isFuturo ? '⬜' : isCompleto ? '✅' : isAtual ? '🔄' : '⚠️';
+      const corBg = isFuturo ? 'rgba(255,255,255,0.02)' 
+                  : isCompleto ? 'rgba(22,163,74,0.08)' 
+                  : isAtual ? 'rgba(13,148,136,0.1)' 
+                  : 'rgba(217,119,6,0.08)';
+      const corBorder = isFuturo ? 'var(--border)'
+                      : isCompleto ? 'rgba(22,163,74,0.3)'
+                      : isAtual ? 'rgba(13,148,136,0.4)'
+                      : 'rgba(217,119,6,0.3)';
+      const corPct = isCompleto ? 'var(--green)' : isAtual ? 'var(--teal2)' : isFuturo ? 'var(--gray2)' : 'var(--amber)';
+
+      const detalhe = isFuturo ? '' 
+        : `<div style="font-size:11px;color:var(--gray);margin-top:3px;">${fmt(m.recebido)} de ${fmt(m.esperado)}${m.nao_pagaram > 0 ? ' · ' + m.nao_pagaram + ' devendo' : ''}</div>`;
+
+      const clickAction = isFuturo ? '' : `onclick="irParaDevendo(${m.num})"`;
+
+      return `<div style="background:${corBg};border:1px solid ${corBorder};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:${isFuturo?'default':'pointer'};" ${clickAction}>
+        <div style="font-size:20px;">${icone}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:${isAtual ? 'var(--white)' : isFuturo ? 'var(--gray2)' : 'var(--white)'};">
+            ${m.mes}${isAtual ? ' ◀ atual' : ''}
+          </div>
+          ${detalhe}
+        </div>
+        ${!isFuturo ? `<div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:${corPct};">${m.pct}%</div>` : ''}
+      </div>`;
+    }).join('');
+
+    document.getElementById('resumo-list').innerHTML = html;
+  } catch(e) {
+    document.getElementById('resumo-list').innerHTML =
+      '<div style="text-align:center;color:var(--red);padding:40px;">Erro de conexão</div>';
+  }
+}
+
+function irParaDevendo(mes) {
+  mesNaoPagou = mes;
+  showTab('tab-naopagou');
 }
 
 // Fecha modal ao clicar fora
