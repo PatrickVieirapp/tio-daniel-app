@@ -980,6 +980,8 @@
   </div>
 </div>
 
+</div><!-- /app-screen -->
+
 
 <!-- ── RESUMO ANUAL TAB ──────────────────────────────────────── -->
 <div id="tab-resumo" class="content" style="display:none;padding-top:16px;">
@@ -994,10 +996,6 @@
   </div>
 
 </div>
-
-</div><!-- /app-screen -->
-
-
 
 <!-- ── BOTTOM NAV ─────────────────────────────────────────── -->
 <nav class="bottom-nav" id="bottom-nav" style="display:none;">
@@ -1406,7 +1404,7 @@ async function loadNaoPagou() {
     }
 
     list.innerHTML = data.pendentes.map(a => `
-      <div class="aluno-card" onclick="openPago('${a.nome.replace(/'/g,"\\'")}')">
+      <div class="aluno-card" onclick="openPago('${a.nome.replace(/'/g,"\\'")}', mesNaoPagou)">
         <div class="aluno-avatar ${a.escola.includes('Ana') ? 'avatar-ana' : 'avatar-orig'}">
           ${a.nome.charAt(0)}
         </div>
@@ -1471,10 +1469,11 @@ function filterAlunos(q) {
 }
 
 // ── Modals ────────────────────────────────────────────────
-function openPago(nome) {
+function openPago(nome, mesContexto) {
   selectedAluno = nome;
   document.getElementById('modal-pago-nome').textContent = nome;
-  document.getElementById('modal-mes').value = mesAtual;
+  // Usa o mês da aba Devendo se chamado de lá, senão usa mesAtual
+  document.getElementById('modal-mes').value = mesContexto || mesNaoPagou || mesAtual;
   document.getElementById('modal-pago').classList.add('active');
 }
 
